@@ -39,6 +39,7 @@ public:
 		TYPE_NEGA_SCOUT,
 		TYPE_MONTE_CARLO,
 		TYPE_MONTECARLO_TREE,
+		MY_TYPE,
 	};
 
 	static AI* createAi(type type);
@@ -104,6 +105,14 @@ public:
 	bool think(Board& b);
 };
 
+class AI_My : public AI {
+public:
+	AI_My() {}
+	~AI_My() {}
+
+	bool think(Board& b);
+};
+
 AI* AI::createAi(type type)
 {
 	switch (type) {
@@ -122,9 +131,11 @@ AI* AI::createAi(type type)
 	case TYPE_MONTECARLO_TREE:
 		return new AI_montecarlo_tree();
 		break;
-		// case TYPE_ORDERED:
-	default:
+	case TYPE_ORDERED:
 		return new AI_ordered();
+		break;
+	default:
+		return new AI_My();
 		break;
 	}
 
@@ -139,6 +150,7 @@ class Board
 	friend class AI_nega_scout;
 	friend class AI_monte_carlo;
 	friend class AI_montecarlo_tree;
+	friend class AI_My;
 
 public:
 	enum WINNER {
@@ -623,10 +635,140 @@ bool AI_montecarlo_tree::think(Board& b)
 	return b.mass_[best_y][best_x].put(Mass::ENEMY);
 }
 
+bool AI_My::think(Board& b)
+{
+#pragma region MyAI
+	if (b.mass_[0][0].getStatus() == Mass::BLANK)
+	{
+		b.mass_[0][0].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[0][0].getStatus() == Mass::BLANK)
+	{
+		b.mass_[0][0].put(Mass::ENEMY);
+		return true;
+	}
+	for (int y = 0; y < Board::BOARD_SIZE; y++)
+	{
+		if (b.mass_[y][0].getStatus() == Mass::BLANK &&
+			b.mass_[y][1].getStatus() == Mass::PLAYER &&
+			b.mass_[y][2].getStatus() == Mass::PLAYER)
+		{
+			b.mass_[y][0].put(Mass::ENEMY);
+			return true;
+		}
+		if (b.mass_[y][0].getStatus() == Mass::PLAYER &&
+			b.mass_[y][1].getStatus() == Mass::BLANK &&
+			b.mass_[y][2].getStatus() == Mass::PLAYER)
+		{
+			b.mass_[y][1].put(Mass::ENEMY);
+			return true;
+		}
+		if (b.mass_[y][0].getStatus() == Mass::PLAYER &&
+			b.mass_[y][1].getStatus() == Mass::PLAYER &&
+			b.mass_[y][2].getStatus() == Mass::BLANK)
+		{
+			b.mass_[y][2].put(Mass::ENEMY);
+			return true;
+		}
+	}
+	for (int x = 0; x < Board::BOARD_SIZE; x++)
+	{
+		if (b.mass_[0][x].getStatus() == Mass::BLANK &&
+			b.mass_[1][x].getStatus() == Mass::PLAYER &&
+			b.mass_[2][x].getStatus() == Mass::PLAYER)
+		{
+			b.mass_[0][x].put(Mass::ENEMY);
+			return true;
+		}
+		if (b.mass_[0][x].getStatus() == Mass::PLAYER &&
+			b.mass_[1][x].getStatus() == Mass::BLANK &&
+			b.mass_[2][x].getStatus() == Mass::PLAYER)
+		{
+			b.mass_[1][x].put(Mass::ENEMY);
+			return true;
+		}
+		if (b.mass_[0][x].getStatus() == Mass::PLAYER &&
+			b.mass_[1][x].getStatus() == Mass::PLAYER &&
+			b.mass_[2][x].getStatus() == Mass::BLANK)
+		{
+			b.mass_[2][x].put(Mass::ENEMY);
+			return true;
+		}
+	}
+
+#pragma region 斜め
+	if (b.mass_[0][0].getStatus() == Mass::BLANK &&
+		b.mass_[1][1].getStatus() == Mass::PLAYER &&
+		b.mass_[2][2].getStatus() == Mass::PLAYER)
+	{
+		b.mass_[0][0].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[0][0].getStatus() == Mass::PLAYER &&
+		b.mass_[1][1].getStatus() == Mass::BLANK &&
+		b.mass_[2][2].getStatus() == Mass::PLAYER)
+	{
+		b.mass_[1][1].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[0][0].getStatus() == Mass::PLAYER &&
+		b.mass_[1][1].getStatus() == Mass::PLAYER &&
+		b.mass_[2][2].getStatus() == Mass::BLANK)
+	{
+		b.mass_[2][2].put(Mass::ENEMY);
+		return true;
+	}
+#pragma endregion
+#pragma region 斜め
+	if (b.mass_[0][2].getStatus() == Mass::BLANK &&
+		b.mass_[1][1].getStatus() == Mass::PLAYER &&
+		b.mass_[2][0].getStatus() == Mass::PLAYER)
+	{
+		b.mass_[0][2].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[0][2].getStatus() == Mass::PLAYER &&
+		b.mass_[1][1].getStatus() == Mass::BLANK &&
+		b.mass_[2][0].getStatus() == Mass::PLAYER)
+	{
+		b.mass_[1][1].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[0][2].getStatus() == Mass::PLAYER &&
+		b.mass_[1][1].getStatus() == Mass::PLAYER &&
+		b.mass_[2][0].getStatus() == Mass::BLANK)
+	{
+		b.mass_[2][0].put(Mass::ENEMY);
+		return true;
+	}
+#pragma endregion
+	if (b.mass_[0][2].getStatus() == Mass::BLANK)
+	{
+		b.mass_[0][2].put(Mass::ENEMY);
+		return true;
+	}
+	if (b.mass_[2][0].getStatus() == Mass::BLANK)
+	{
+		b.mass_[2][0].put(Mass::ENEMY);
+		return true;
+	}
+	for (int y = 0; y < Board::BOARD_SIZE; y++) {
+		for (int x = 0; x < Board::BOARD_SIZE; x++) {
+			if (b.mass_[y][x].put(Mass::ENEMY)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+#pragma endregion
+}
+
 class Game
 {
 private:
-	const AI::type ai_type = AI::TYPE_MONTECARLO_TREE;
+	const AI::type ai_type = AI::MY_TYPE;
 
 	Board board_;
 	Board::WINNER winner_ = Board::NOT_FINISED;
